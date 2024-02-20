@@ -35,6 +35,7 @@ FLAX_MODEL_MAPPING_NAMES = OrderedDict(
         ("big_bird", "FlaxBigBirdModel"),
         ("blenderbot", "FlaxBlenderbotModel"),
         ("blenderbot-small", "FlaxBlenderbotSmallModel"),
+        ("bloom", "FlaxBloomModel"),
         ("clip", "FlaxCLIPModel"),
         ("distilbert", "FlaxDistilBertModel"),
         ("electra", "FlaxElectraModel"),
@@ -42,12 +43,16 @@ FLAX_MODEL_MAPPING_NAMES = OrderedDict(
         ("gpt2", "FlaxGPT2Model"),
         ("gpt_neo", "FlaxGPTNeoModel"),
         ("gptj", "FlaxGPTJModel"),
+        ("llama", "FlaxLlamaModel"),
         ("longt5", "FlaxLongT5Model"),
         ("marian", "FlaxMarianModel"),
         ("mbart", "FlaxMBartModel"),
+        ("mistral", "FlaxMistralModel"),
         ("mt5", "FlaxMT5Model"),
         ("opt", "FlaxOPTModel"),
         ("pegasus", "FlaxPegasusModel"),
+        ("regnet", "FlaxRegNetModel"),
+        ("resnet", "FlaxResNetModel"),
         ("roberta", "FlaxRobertaModel"),
         ("roberta-prelayernorm", "FlaxRobertaPreLayerNormModel"),
         ("roformer", "FlaxRoFormerModel"),
@@ -55,6 +60,7 @@ FLAX_MODEL_MAPPING_NAMES = OrderedDict(
         ("vision-text-dual-encoder", "FlaxVisionTextDualEncoderModel"),
         ("vit", "FlaxViTModel"),
         ("wav2vec2", "FlaxWav2Vec2Model"),
+        ("whisper", "FlaxWhisperModel"),
         ("xglm", "FlaxXGLMModel"),
         ("xlm-roberta", "FlaxXLMRobertaModel"),
     ]
@@ -76,6 +82,7 @@ FLAX_MODEL_FOR_PRETRAINING_MAPPING_NAMES = OrderedDict(
         ("roformer", "FlaxRoFormerForMaskedLM"),
         ("t5", "FlaxT5ForConditionalGeneration"),
         ("wav2vec2", "FlaxWav2Vec2ForPreTraining"),
+        ("whisper", "FlaxWhisperForConditionalGeneration"),
         ("xlm-roberta", "FlaxXLMRobertaForMaskedLM"),
     ]
 )
@@ -117,6 +124,8 @@ FLAX_MODEL_FOR_IMAGE_CLASSIFICATION_MAPPING_NAMES = OrderedDict(
     [
         # Model for Image-classsification
         ("beit", "FlaxBeitForImageClassification"),
+        ("regnet", "FlaxRegNetForImageClassification"),
+        ("resnet", "FlaxResNetForImageClassification"),
         ("vit", "FlaxViTForImageClassification"),
     ]
 )
@@ -133,11 +142,14 @@ FLAX_MODEL_FOR_CAUSAL_LM_MAPPING_NAMES = OrderedDict(
         ("bart", "FlaxBartForCausalLM"),
         ("bert", "FlaxBertForCausalLM"),
         ("big_bird", "FlaxBigBirdForCausalLM"),
+        ("bloom", "FlaxBloomForCausalLM"),
         ("electra", "FlaxElectraForCausalLM"),
         ("gpt-sw3", "FlaxGPT2LMHeadModel"),
         ("gpt2", "FlaxGPT2LMHeadModel"),
         ("gpt_neo", "FlaxGPTNeoForCausalLM"),
         ("gptj", "FlaxGPTJForCausalLM"),
+        ("llama", "FlaxLlamaForCausalLM"),
+        ("mistral", "FlaxMistralForCausalLM"),
         ("opt", "FlaxOPTForCausalLM"),
         ("roberta", "FlaxRobertaForCausalLM"),
         ("roberta-prelayernorm", "FlaxRobertaPreLayerNormForCausalLM"),
@@ -219,9 +231,15 @@ FLAX_MODEL_FOR_NEXT_SENTENCE_PREDICTION_MAPPING_NAMES = OrderedDict(
 FLAX_MODEL_FOR_SPEECH_SEQ_2_SEQ_MAPPING_NAMES = OrderedDict(
     [
         ("speech-encoder-decoder", "FlaxSpeechEncoderDecoderModel"),
+        ("whisper", "FlaxWhisperForConditionalGeneration"),
     ]
 )
 
+FLAX_MODEL_FOR_AUDIO_CLASSIFICATION_MAPPING_NAMES = OrderedDict(
+    [
+        ("whisper", "FlaxWhisperForAudioClassification"),
+    ]
+)
 
 FLAX_MODEL_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, FLAX_MODEL_MAPPING_NAMES)
 FLAX_MODEL_FOR_PRETRAINING_MAPPING = _LazyAutoMapping(CONFIG_MAPPING_NAMES, FLAX_MODEL_FOR_PRETRAINING_MAPPING_NAMES)
@@ -251,6 +269,9 @@ FLAX_MODEL_FOR_NEXT_SENTENCE_PREDICTION_MAPPING = _LazyAutoMapping(
 )
 FLAX_MODEL_FOR_SPEECH_SEQ_2_SEQ_MAPPING = _LazyAutoMapping(
     CONFIG_MAPPING_NAMES, FLAX_MODEL_FOR_SPEECH_SEQ_2_SEQ_MAPPING_NAMES
+)
+FLAX_MODEL_FOR_AUDIO_CLASSIFICATION_MAPPING = _LazyAutoMapping(
+    CONFIG_MAPPING_NAMES, FLAX_MODEL_FOR_AUDIO_CLASSIFICATION_MAPPING_NAMES
 )
 
 
@@ -287,7 +308,9 @@ class FlaxAutoModelForSeq2SeqLM(_BaseAutoModelClass):
 
 
 FlaxAutoModelForSeq2SeqLM = auto_class_update(
-    FlaxAutoModelForSeq2SeqLM, head_doc="sequence-to-sequence language modeling", checkpoint_for_example="t5-base"
+    FlaxAutoModelForSeq2SeqLM,
+    head_doc="sequence-to-sequence language modeling",
+    checkpoint_for_example="google-t5/t5-base",
 )
 
 

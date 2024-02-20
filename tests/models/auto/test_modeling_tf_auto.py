@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import copy
 import tempfile
 import unittest
@@ -83,7 +85,7 @@ if is_tf_available():
 class TFAutoModelTest(unittest.TestCase):
     @slow
     def test_model_from_pretrained(self):
-        model_name = "bert-base-cased"
+        model_name = "google-bert/bert-base-cased"
         config = AutoConfig.from_pretrained(model_name)
         self.assertIsNotNone(config)
         self.assertIsInstance(config, BertConfig)
@@ -94,7 +96,7 @@ class TFAutoModelTest(unittest.TestCase):
 
     @slow
     def test_model_for_pretraining_from_pretrained(self):
-        model_name = "bert-base-cased"
+        model_name = "google-bert/bert-base-cased"
         config = AutoConfig.from_pretrained(model_name)
         self.assertIsNotNone(config)
         self.assertIsInstance(config, BertConfig)
@@ -153,7 +155,7 @@ class TFAutoModelTest(unittest.TestCase):
     @slow
     def test_sequence_classification_model_from_pretrained(self):
         # for model_name in TF_BERT_PRETRAINED_MODEL_ARCHIVE_LIST[:1]:
-        for model_name in ["bert-base-uncased"]:
+        for model_name in ["google-bert/bert-base-uncased"]:
             config = AutoConfig.from_pretrained(model_name)
             self.assertIsNotNone(config)
             self.assertIsInstance(config, BertConfig)
@@ -165,7 +167,7 @@ class TFAutoModelTest(unittest.TestCase):
     @slow
     def test_question_answering_model_from_pretrained(self):
         # for model_name in TF_BERT_PRETRAINED_MODEL_ARCHIVE_LIST[:1]:
-        for model_name in ["bert-base-uncased"]:
+        for model_name in ["google-bert/bert-base-uncased"]:
             config = AutoConfig.from_pretrained(model_name)
             self.assertIsNotNone(config)
             self.assertIsInstance(config, BertConfig)
@@ -209,6 +211,8 @@ class TFAutoModelTest(unittest.TestCase):
         config = copy.deepcopy(model.config)
         config.architectures = ["FunnelBaseModel"]
         model = TFAutoModel.from_config(config)
+        model.build_in_name_scope()
+
         self.assertIsInstance(model, TFFunnelBaseModel)
 
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -243,7 +247,10 @@ class TFAutoModelTest(unittest.TestCase):
                     # Now that the config is registered, it can be used as any other config with the auto-API
                     tiny_config = BertModelTester(self).get_config()
                     config = NewModelConfig(**tiny_config.to_dict())
+
                     model = auto_class.from_config(config)
+                    model.build_in_name_scope()
+
                     self.assertIsInstance(model, TFNewModel)
 
                     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -294,14 +301,14 @@ class TFAutoModelTest(unittest.TestCase):
         _ = TFAutoModel.from_pretrained("hf-internal-testing/tiny-random-bert")
         with RequestCounter() as counter:
             _ = TFAutoModel.from_pretrained("hf-internal-testing/tiny-random-bert")
-            self.assertEqual(counter.get_request_count, 0)
-            self.assertEqual(counter.head_request_count, 1)
-            self.assertEqual(counter.other_request_count, 0)
+        self.assertEqual(counter["GET"], 0)
+        self.assertEqual(counter["HEAD"], 1)
+        self.assertEqual(counter.total_calls, 1)
 
         # With a sharded checkpoint
         _ = TFAutoModel.from_pretrained("ArthurZ/tiny-random-bert-sharded")
         with RequestCounter() as counter:
             _ = TFAutoModel.from_pretrained("ArthurZ/tiny-random-bert-sharded")
-            self.assertEqual(counter.get_request_count, 0)
-            self.assertEqual(counter.head_request_count, 1)
-            self.assertEqual(counter.other_request_count, 0)
+        self.assertEqual(counter["GET"], 0)
+        self.assertEqual(counter["HEAD"], 1)
+        self.assertEqual(counter.total_calls, 1)

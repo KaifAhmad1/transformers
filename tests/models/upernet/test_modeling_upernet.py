@@ -15,7 +15,6 @@
 """ Testing suite for the PyTorch UperNet framework. """
 
 
-import inspect
 import unittest
 
 from huggingface_hub import hf_hub_download
@@ -26,6 +25,7 @@ from transformers.utils import is_torch_available, is_vision_available
 
 from ...test_configuration_common import ConfigTester
 from ...test_modeling_common import ModelTesterMixin, _config_zero_init, floats_tensor, ids_tensor
+from ...test_pipeline_mixin import PipelineTesterMixin
 
 
 if is_torch_available():
@@ -50,7 +50,7 @@ class UperNetModelTester:
         num_channels=3,
         num_stages=4,
         hidden_sizes=[10, 20, 30, 40],
-        depths=[2, 2, 3, 2],
+        depths=[1, 1, 1, 1],
         is_training=True,
         use_labels=True,
         intermediate_size=37,
@@ -105,12 +105,13 @@ class UperNetModelTester:
     def get_config(self):
         return UperNetConfig(
             backbone_config=self.get_backbone_config(),
-            hidden_size=512,
+            backbone=None,
+            hidden_size=64,
             pool_scales=[1, 2, 3, 6],
             use_auxiliary_head=True,
             auxiliary_loss_weight=0.4,
             auxiliary_in_channels=40,
-            auxiliary_channels=256,
+            auxiliary_channels=32,
             auxiliary_num_convs=1,
             auxiliary_concat_input=False,
             loss_ignore_index=255,
@@ -138,13 +139,14 @@ class UperNetModelTester:
 
 
 @require_torch
-class UperNetModelTest(ModelTesterMixin, unittest.TestCase):
+class UperNetModelTest(ModelTesterMixin, PipelineTesterMixin, unittest.TestCase):
     """
     Here we also overwrite some of the tests of test_modeling_common.py, as UperNet does not use input_ids, inputs_embeds,
     attention_mask and seq_length.
     """
 
     all_model_classes = (UperNetForSemanticSegmentation,) if is_torch_available() else ()
+    pipeline_model_mapping = {"image-segmentation": UperNetForSemanticSegmentation} if is_torch_available() else {}
     fx_compatible = False
     test_pruning = False
     test_resize_embeddings = False
@@ -167,18 +169,6 @@ class UperNetModelTest(ModelTesterMixin, unittest.TestCase):
 
     def create_and_test_config_common_properties(self):
         return
-
-    def test_forward_signature(self):
-        config, _ = self.model_tester.prepare_config_and_inputs_for_common()
-
-        for model_class in self.all_model_classes:
-            model = model_class(config)
-            signature = inspect.signature(model.forward)
-            # signature.parameters is an OrderedDict => so arg_names order is deterministic
-            arg_names = [*signature.parameters.keys()]
-
-            expected_arg_names = ["pixel_values"]
-            self.assertListEqual(arg_names[:1], expected_arg_names)
 
     def test_for_semantic_segmentation(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()

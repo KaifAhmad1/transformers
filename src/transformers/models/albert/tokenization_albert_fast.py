@@ -34,36 +34,36 @@ VOCAB_FILES_NAMES = {"vocab_file": "spiece.model", "tokenizer_file": "tokenizer.
 
 PRETRAINED_VOCAB_FILES_MAP = {
     "vocab_file": {
-        "albert-base-v1": "https://huggingface.co/albert-base-v1/resolve/main/spiece.model",
-        "albert-large-v1": "https://huggingface.co/albert-large-v1/resolve/main/spiece.model",
-        "albert-xlarge-v1": "https://huggingface.co/albert-xlarge-v1/resolve/main/spiece.model",
-        "albert-xxlarge-v1": "https://huggingface.co/albert-xxlarge-v1/resolve/main/spiece.model",
-        "albert-base-v2": "https://huggingface.co/albert-base-v2/resolve/main/spiece.model",
-        "albert-large-v2": "https://huggingface.co/albert-large-v2/resolve/main/spiece.model",
-        "albert-xlarge-v2": "https://huggingface.co/albert-xlarge-v2/resolve/main/spiece.model",
-        "albert-xxlarge-v2": "https://huggingface.co/albert-xxlarge-v2/resolve/main/spiece.model",
+        "albert/albert-base-v1": "https://huggingface.co/albert/albert-base-v1/resolve/main/spiece.model",
+        "albert/albert-large-v1": "https://huggingface.co/albert/albert-large-v1/resolve/main/spiece.model",
+        "albert/albert-xlarge-v1": "https://huggingface.co/albert/albert-xlarge-v1/resolve/main/spiece.model",
+        "albert/albert-xxlarge-v1": "https://huggingface.co/albert/albert-xxlarge-v1/resolve/main/spiece.model",
+        "albert/albert-base-v2": "https://huggingface.co/albert/albert-base-v2/resolve/main/spiece.model",
+        "albert/albert-large-v2": "https://huggingface.co/albert/albert-large-v2/resolve/main/spiece.model",
+        "albert/albert-xlarge-v2": "https://huggingface.co/albert/albert-xlarge-v2/resolve/main/spiece.model",
+        "albert/albert-xxlarge-v2": "https://huggingface.co/albert/albert-xxlarge-v2/resolve/main/spiece.model",
     },
     "tokenizer_file": {
-        "albert-base-v1": "https://huggingface.co/albert-base-v1/resolve/main/tokenizer.json",
-        "albert-large-v1": "https://huggingface.co/albert-large-v1/resolve/main/tokenizer.json",
-        "albert-xlarge-v1": "https://huggingface.co/albert-xlarge-v1/resolve/main/tokenizer.json",
-        "albert-xxlarge-v1": "https://huggingface.co/albert-xxlarge-v1/resolve/main/tokenizer.json",
-        "albert-base-v2": "https://huggingface.co/albert-base-v2/resolve/main/tokenizer.json",
-        "albert-large-v2": "https://huggingface.co/albert-large-v2/resolve/main/tokenizer.json",
-        "albert-xlarge-v2": "https://huggingface.co/albert-xlarge-v2/resolve/main/tokenizer.json",
-        "albert-xxlarge-v2": "https://huggingface.co/albert-xxlarge-v2/resolve/main/tokenizer.json",
+        "albert/albert-base-v1": "https://huggingface.co/albert/albert-base-v1/resolve/main/tokenizer.json",
+        "albert/albert-large-v1": "https://huggingface.co/albert/albert-large-v1/resolve/main/tokenizer.json",
+        "albert/albert-xlarge-v1": "https://huggingface.co/albert/albert-xlarge-v1/resolve/main/tokenizer.json",
+        "albert/albert-xxlarge-v1": "https://huggingface.co/albert/albert-xxlarge-v1/resolve/main/tokenizer.json",
+        "albert/albert-base-v2": "https://huggingface.co/albert/albert-base-v2/resolve/main/tokenizer.json",
+        "albert/albert-large-v2": "https://huggingface.co/albert/albert-large-v2/resolve/main/tokenizer.json",
+        "albert/albert-xlarge-v2": "https://huggingface.co/albert/albert-xlarge-v2/resolve/main/tokenizer.json",
+        "albert/albert-xxlarge-v2": "https://huggingface.co/albert/albert-xxlarge-v2/resolve/main/tokenizer.json",
     },
 }
 
 PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {
-    "albert-base-v1": 512,
-    "albert-large-v1": 512,
-    "albert-xlarge-v1": 512,
-    "albert-xxlarge-v1": 512,
-    "albert-base-v2": 512,
-    "albert-large-v2": 512,
-    "albert-xlarge-v2": 512,
-    "albert-xxlarge-v2": 512,
+    "albert/albert-base-v1": 512,
+    "albert/albert-large-v1": 512,
+    "albert/albert-xlarge-v1": 512,
+    "albert/albert-xxlarge-v1": 512,
+    "albert/albert-base-v2": 512,
+    "albert/albert-large-v2": 512,
+    "albert/albert-xlarge-v2": 512,
+    "albert/albert-xxlarge-v2": 512,
 }
 
 SPIECE_UNDERLINE = "▁"
@@ -165,7 +165,10 @@ class AlbertTokenizerFast(PreTrainedTokenizerFast):
         self.remove_space = remove_space
         self.keep_accents = keep_accents
         self.vocab_file = vocab_file
-        self.can_save_slow_tokenizer = False if not self.vocab_file else True
+
+    @property
+    def can_save_slow_tokenizer(self) -> bool:
+        return os.path.isfile(self.vocab_file) if self.vocab_file else False
 
     def build_inputs_with_special_tokens(
         self, token_ids_0: List[int], token_ids_1: Optional[List[int]] = None

@@ -18,9 +18,8 @@ Image/Text processor class for OneFormer
 
 from typing import List
 
-from transformers.utils import is_torch_available
-
 from ...processing_utils import ProcessorMixin
+from ...utils import is_torch_available
 
 
 if is_torch_available():
@@ -43,6 +42,7 @@ class OneFormerProcessor(ProcessorMixin):
         task_seq_len (`int`, *optional*, defaults to 77):
             Sequence length for input task token.
     """
+
     attributes = ["image_processor", "tokenizer"]
     image_processor_class = "OneFormerImageProcessor"
     tokenizer_class = ("CLIPTokenizer", "CLIPTokenizerFast")

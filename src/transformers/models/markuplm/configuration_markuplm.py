@@ -14,9 +14,8 @@
 # limitations under the License.
 """ MarkupLM model configuration"""
 
-from transformers.utils import logging
-
 from ...configuration_utils import PretrainedConfig
+from ...utils import logging
 
 
 logger = logging.get_logger(__name__)
@@ -98,6 +97,7 @@ class MarkupLMConfig(PretrainedConfig):
     >>> # Accessing the model configuration
     >>> configuration = model.config
     ```"""
+
     model_type = "markuplm"
 
     def __init__(

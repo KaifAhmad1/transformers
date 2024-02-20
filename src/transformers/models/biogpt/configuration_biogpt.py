@@ -53,7 +53,7 @@ class BioGptConfig(PretrainedConfig):
             The non-linear activation function (function or string) in the encoder and pooler. If string, `"gelu"`,
             `"relu"`, `"selu"` and `"gelu_new"` are supported.
         hidden_dropout_prob (`float`, *optional*, defaults to 0.1):
-            The dropout probabilitiy for all fully connected layers in the embeddings, encoder, and pooler.
+            The dropout probability for all fully connected layers in the embeddings, encoder, and pooler.
         attention_probs_dropout_prob (`float`, *optional*, defaults to 0.1):
             The dropout ratio for the attention probabilities.
         max_position_embeddings (`int`, *optional*, defaults to 1024):
@@ -72,13 +72,14 @@ class BioGptConfig(PretrainedConfig):
             Please refer to the paper about LayerDrop: https://arxiv.org/abs/1909.11556 for further details
         activation_dropout (`float`, *optional*, defaults to 0.0):
             The dropout ratio for activations inside the fully connected layer.
-        pad_token_id (`int`, *optional*, defaults to 1)
+        pad_token_id (`int`, *optional*, defaults to 1):
             Padding token id.
-        bos_token_id (`int`, *optional*, defaults to 0)
+        bos_token_id (`int`, *optional*, defaults to 0):
             Beginning of stream token id.
-        eos_token_id (`int`, *optional*, defaults to 2)
+        eos_token_id (`int`, *optional*, defaults to 2):
             End of stream token id.
-        Example:
+
+    Example:
 
     ```python
     >>> from transformers import BioGptModel, BioGptConfig
@@ -92,6 +93,7 @@ class BioGptConfig(PretrainedConfig):
     >>> # Accessing the model configuration
     >>> configuration = model.config
     ```"""
+
     model_type = "biogpt"
 
     def __init__(

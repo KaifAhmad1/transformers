@@ -16,6 +16,13 @@ class FlaxForcedEOSTokenLogitsProcessor(metaclass=DummyObject):
         requires_backends(self, ["flax"])
 
 
+class FlaxForceTokensLogitsProcessor(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
 class FlaxGenerationMixin(metaclass=DummyObject):
     _backends = ["flax"]
 
@@ -51,6 +58,20 @@ class FlaxMinLengthLogitsProcessor(metaclass=DummyObject):
         requires_backends(self, ["flax"])
 
 
+class FlaxSuppressTokensAtBeginLogitsProcessor(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
+class FlaxSuppressTokensLogitsProcessor(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
 class FlaxTemperatureLogitsWarper(metaclass=DummyObject):
     _backends = ["flax"]
 
@@ -66,6 +87,13 @@ class FlaxTopKLogitsWarper(metaclass=DummyObject):
 
 
 class FlaxTopPLogitsWarper(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
+class FlaxWhisperTimeStampLogitsProcessor(metaclass=DummyObject):
     _backends = ["flax"]
 
     def __init__(self, *args, **kwargs):
@@ -135,6 +163,9 @@ class FlaxAlbertPreTrainedModel(metaclass=DummyObject):
         requires_backends(self, ["flax"])
 
 
+FLAX_MODEL_FOR_AUDIO_CLASSIFICATION_MAPPING = None
+
+
 FLAX_MODEL_FOR_CAUSAL_LM_MAPPING = None
 
 
@@ -160,6 +191,9 @@ FLAX_MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING = None
 
 
 FLAX_MODEL_FOR_SEQUENCE_CLASSIFICATION_MAPPING = None
+
+
+FLAX_MODEL_FOR_SPEECH_SEQ_2_SEQ_MAPPING = None
 
 
 FLAX_MODEL_FOR_TOKEN_CLASSIFICATION_MAPPING = None
@@ -235,6 +269,13 @@ class FlaxAutoModelForSeq2SeqLM(metaclass=DummyObject):
 
 
 class FlaxAutoModelForSequenceClassification(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
+class FlaxAutoModelForSpeechSeq2Seq(metaclass=DummyObject):
     _backends = ["flax"]
 
     def __init__(self, *args, **kwargs):
@@ -507,6 +548,27 @@ class FlaxBlenderbotSmallPreTrainedModel(metaclass=DummyObject):
         requires_backends(self, ["flax"])
 
 
+class FlaxBloomForCausalLM(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
+class FlaxBloomModel(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
+class FlaxBloomPreTrainedModel(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
 class FlaxCLIPModel(metaclass=DummyObject):
     _backends = ["flax"]
 
@@ -522,6 +584,13 @@ class FlaxCLIPPreTrainedModel(metaclass=DummyObject):
 
 
 class FlaxCLIPTextModel(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
+class FlaxCLIPTextModelWithProjection(metaclass=DummyObject):
     _backends = ["flax"]
 
     def __init__(self, *args, **kwargs):
@@ -731,6 +800,27 @@ class FlaxGPTJPreTrainedModel(metaclass=DummyObject):
         requires_backends(self, ["flax"])
 
 
+class FlaxLlamaForCausalLM(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
+class FlaxLlamaModel(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
+class FlaxLlamaPreTrainedModel(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
 class FlaxLongT5ForConditionalGeneration(metaclass=DummyObject):
     _backends = ["flax"]
 
@@ -808,6 +898,27 @@ class FlaxMBartPreTrainedModel(metaclass=DummyObject):
         requires_backends(self, ["flax"])
 
 
+class FlaxMistralForCausalLM(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
+class FlaxMistralModel(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
+class FlaxMistralPreTrainedModel(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
 class FlaxMT5EncoderModel(metaclass=DummyObject):
     _backends = ["flax"]
 
@@ -865,6 +976,48 @@ class FlaxPegasusModel(metaclass=DummyObject):
 
 
 class FlaxPegasusPreTrainedModel(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
+class FlaxRegNetForImageClassification(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
+class FlaxRegNetModel(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
+class FlaxRegNetPreTrainedModel(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
+class FlaxResNetForImageClassification(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
+class FlaxResNetModel(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
+class FlaxResNetPreTrainedModel(metaclass=DummyObject):
     _backends = ["flax"]
 
     def __init__(self, *args, **kwargs):
@@ -1124,6 +1277,34 @@ class FlaxWav2Vec2Model(metaclass=DummyObject):
 
 
 class FlaxWav2Vec2PreTrainedModel(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
+class FlaxWhisperForAudioClassification(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
+class FlaxWhisperForConditionalGeneration(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
+class FlaxWhisperModel(metaclass=DummyObject):
+    _backends = ["flax"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["flax"])
+
+
+class FlaxWhisperPreTrainedModel(metaclass=DummyObject):
     _backends = ["flax"]
 
     def __init__(self, *args, **kwargs):

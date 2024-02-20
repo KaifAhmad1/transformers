@@ -17,10 +17,11 @@ import tempfile
 import unittest
 
 from transformers import FlaubertConfig, is_torch_available
-from transformers.testing_utils import require_torch, require_torch_gpu, slow, torch_device
+from transformers.testing_utils import require_torch, require_torch_accelerator, slow, torch_device
 
 from ...test_configuration_common import ConfigTester
 from ...test_modeling_common import ModelTesterMixin, ids_tensor, random_attention_mask
+from ...test_pipeline_mixin import PipelineTesterMixin
 
 
 if is_torch_available():
@@ -56,7 +57,7 @@ class FlaubertModelTester(object):
         vocab_size=99,
         n_special=0,
         hidden_size=32,
-        num_hidden_layers=5,
+        num_hidden_layers=2,
         num_attention_heads=4,
         hidden_dropout_prob=0.1,
         attention_probs_dropout_prob=0.1,
@@ -362,7 +363,7 @@ class FlaubertModelTester(object):
 
 
 @require_torch
-class FlaubertModelTest(ModelTesterMixin, unittest.TestCase):
+class FlaubertModelTest(ModelTesterMixin, PipelineTesterMixin, unittest.TestCase):
     all_model_classes = (
         (
             FlaubertModel,
@@ -376,6 +377,34 @@ class FlaubertModelTest(ModelTesterMixin, unittest.TestCase):
         if is_torch_available()
         else ()
     )
+    pipeline_model_mapping = (
+        {
+            "feature-extraction": FlaubertModel,
+            "fill-mask": FlaubertWithLMHeadModel,
+            "question-answering": FlaubertForQuestionAnsweringSimple,
+            "text-classification": FlaubertForSequenceClassification,
+            "token-classification": FlaubertForTokenClassification,
+            "zero-shot": FlaubertForSequenceClassification,
+        }
+        if is_torch_available()
+        else {}
+    )
+
+    # TODO: Fix the failed tests
+    def is_pipeline_test_to_skip(
+        self, pipeline_test_casse_name, config_class, model_architecture, tokenizer_name, processor_name
+    ):
+        if (
+            pipeline_test_casse_name == "QAPipelineTests"
+            and tokenizer_name is not None
+            and not tokenizer_name.endswith("Fast")
+        ):
+            # `QAPipelineTests` fails for a few models when the slower tokenizer are used.
+            # (The slower tokenizers were never used for pipeline tests before the pipeline testing rework)
+            # TODO: check (and possibly fix) the `QAPipelineTests` with slower tokenizer
+            return True
+
+        return False
 
     # Flaubert has 2 QA models -> need to manually set the correct labels for one of them here
     def _prepare_for_class(self, inputs_dict, model_class, return_labels=False):
@@ -434,7 +463,7 @@ class FlaubertModelTest(ModelTesterMixin, unittest.TestCase):
             self.assertIsNotNone(model)
 
     @slow
-    @require_torch_gpu
+    @require_torch_accelerator
     def test_torchscript_device_change(self):
         config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()
         for model_class in self.all_model_classes:

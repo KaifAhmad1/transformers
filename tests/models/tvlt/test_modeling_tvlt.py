@@ -33,6 +33,7 @@ from transformers.utils import cached_property
 
 from ...test_configuration_common import ConfigTester
 from ...test_modeling_common import ModelTesterMixin, floats_tensor
+from ...test_pipeline_mixin import PipelineTesterMixin
 
 
 if is_torch_available():
@@ -41,9 +42,6 @@ if is_torch_available():
 
     from transformers import TvltForAudioVisualClassification, TvltForPreTraining, TvltModel
     from transformers.models.tvlt.modeling_tvlt import TVLT_PRETRAINED_MODEL_ARCHIVE_LIST
-    from transformers.pytorch_utils import is_torch_greater_or_equal_than_1_10
-else:
-    is_torch_greater_or_equal_than_1_10 = False
 
 
 if is_datasets_available():
@@ -69,8 +67,8 @@ class TvltModelTester:
         num_image_channels=3,
         num_audio_channels=1,
         num_frames=2,
-        hidden_size=128,
-        num_hidden_layers=12,
+        hidden_size=32,
+        num_hidden_layers=2,
         num_attention_heads=4,
         intermediate_size=128,
         hidden_act="gelu",
@@ -81,7 +79,7 @@ class TvltModelTester:
         qkv_bias=True,
         use_mean_pooling=True,
         decoder_num_attention_heads=4,
-        decoder_hidden_size=64,
+        decoder_hidden_size=32,
         decoder_num_hidden_layers=2,
         decoder_intermediate_size=128,
         image_mask_ratio=0.75,
@@ -321,11 +319,11 @@ class TvltModelTester:
 
 
 @require_torch
-@unittest.skipIf(not is_torch_greater_or_equal_than_1_10, "TVLT is only available in torch v1.10+")
-class TvltModelTest(ModelTesterMixin, unittest.TestCase):
+class TvltModelTest(ModelTesterMixin, PipelineTesterMixin, unittest.TestCase):
     all_model_classes = (
         (TvltModel, TvltForPreTraining, TvltForAudioVisualClassification) if is_torch_available() else ()
     )
+    pipeline_model_mapping = {"feature-extraction": TvltModel} if is_torch_available() else {}
 
     fx_compatible = False
     test_pruning = False
@@ -566,7 +564,7 @@ def prepare_audio(num_samples=1):
 @require_vision
 class TvltModelIntegrationTest(unittest.TestCase):
     @cached_property
-    def default_feature_extractor(self):
+    def default_processors(self):
         # logits were tested with a different mean and std, so we use the same here
         return (
             TvltImageProcessor() if is_vision_available() else None,
@@ -576,12 +574,12 @@ class TvltModelIntegrationTest(unittest.TestCase):
     def test_inference_for_base_model(self):
         model = TvltModel.from_pretrained("ZinengTang/tvlt-base").to(torch_device)
 
-        image_processor, audio_feature_extractor = self.default_feature_extractor
+        image_processor, audio_feature_extractor = self.default_processors
         video = prepare_video()
         audio = prepare_audio()
         video_inputs = image_processor(video, return_tensors="pt").to(torch_device)
         audio_inputs = audio_feature_extractor(audio, return_tensors="pt").to(torch_device)
-        inputs = dict()
+        inputs = {}
         inputs.update(video_inputs)
         inputs.update(audio_inputs)
 
@@ -590,7 +588,7 @@ class TvltModelIntegrationTest(unittest.TestCase):
             outputs = model(**inputs)
 
         # verify the logits
-        expected_last_hidden_state_slice = torch.tensor([[-0.0186, -0.0691], [0.0242, -0.0398]])
+        expected_last_hidden_state_slice = torch.tensor([[-0.0186, -0.0691], [0.0242, -0.0398]], device=torch_device)
         self.assertTrue(
             torch.allclose(outputs.last_hidden_state[:, :2, :2], expected_last_hidden_state_slice, atol=1e-4)
         )
@@ -598,7 +596,7 @@ class TvltModelIntegrationTest(unittest.TestCase):
     def test_inference_for_pretraining(self):
         model = TvltForPreTraining.from_pretrained("ZinengTang/tvlt-base").to(torch_device)
 
-        image_processor, audio_feature_extractor = self.default_feature_extractor
+        image_processor, audio_feature_extractor = self.default_processors
         video = prepare_video()
         video_mixed = prepare_video()
         audio = prepare_audio()
@@ -606,7 +604,7 @@ class TvltModelIntegrationTest(unittest.TestCase):
         video_mixed_inputs = image_processor(video_mixed, is_mixed=True, return_tensors="pt").to(torch_device)
         audio_inputs = audio_feature_extractor(audio, return_tensors="pt", mask_audio=True).to(torch_device)
         labels = torch.tensor([[0.0]], device=torch_device)
-        inputs = dict()
+        inputs = {}
         inputs.update(video_inputs)
         inputs.update(video_mixed_inputs)
         inputs.update(audio_inputs)

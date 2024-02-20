@@ -15,7 +15,6 @@
 """ Testing suite for the PyTorch Donut Swin model. """
 
 import collections
-import inspect
 import unittest
 
 from transformers import DonutSwinConfig
@@ -24,6 +23,7 @@ from transformers.utils import is_torch_available
 
 from ...test_configuration_common import ConfigTester
 from ...test_modeling_common import ModelTesterMixin, _config_zero_init, floats_tensor, ids_tensor
+from ...test_pipeline_mixin import PipelineTesterMixin
 
 
 if is_torch_available():
@@ -143,8 +143,9 @@ class DonutSwinModelTester:
 
 
 @require_torch
-class DonutSwinModelTest(ModelTesterMixin, unittest.TestCase):
+class DonutSwinModelTest(ModelTesterMixin, PipelineTesterMixin, unittest.TestCase):
     all_model_classes = (DonutSwinModel,) if is_torch_available() else ()
+    pipeline_model_mapping = {"image-feature-extraction": DonutSwinModel} if is_torch_available() else {}
     fx_compatible = True
 
     test_pruning = False
@@ -183,18 +184,6 @@ class DonutSwinModelTest(ModelTesterMixin, unittest.TestCase):
             self.assertIsInstance(model.get_input_embeddings(), (nn.Module))
             x = model.get_output_embeddings()
             self.assertTrue(x is None or isinstance(x, nn.Linear))
-
-    def test_forward_signature(self):
-        config, _ = self.model_tester.prepare_config_and_inputs_for_common()
-
-        for model_class in self.all_model_classes:
-            model = model_class(config)
-            signature = inspect.signature(model.forward)
-            # signature.parameters is an OrderedDict => so arg_names order is deterministic
-            arg_names = [*signature.parameters.keys()]
-
-            expected_arg_names = ["pixel_values"]
-            self.assertListEqual(arg_names[:1], expected_arg_names)
 
     def test_attention_outputs(self):
         config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()

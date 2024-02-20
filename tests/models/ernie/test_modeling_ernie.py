@@ -18,11 +18,12 @@ import unittest
 
 from transformers import ErnieConfig, is_torch_available
 from transformers.models.auto import get_values
-from transformers.testing_utils import require_torch, require_torch_gpu, slow, torch_device
+from transformers.testing_utils import require_torch, require_torch_accelerator, slow, torch_device
 
 from ...generation.test_utils import GenerationTesterMixin
 from ...test_configuration_common import ConfigTester
 from ...test_modeling_common import ModelTesterMixin, floats_tensor, ids_tensor, random_attention_mask
+from ...test_pipeline_mixin import PipelineTesterMixin
 
 
 if is_torch_available():
@@ -55,7 +56,7 @@ class ErnieModelTester:
         use_labels=True,
         vocab_size=99,
         hidden_size=32,
-        num_hidden_layers=5,
+        num_hidden_layers=2,
         num_attention_heads=4,
         intermediate_size=37,
         hidden_act="gelu",
@@ -426,7 +427,7 @@ class ErnieModelTester:
 
 
 @require_torch
-class ErnieModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase):
+class ErnieModelTest(ModelTesterMixin, GenerationTesterMixin, PipelineTesterMixin, unittest.TestCase):
     all_model_classes = (
         (
             ErnieModel,
@@ -443,6 +444,19 @@ class ErnieModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase)
         else ()
     )
     all_generative_model_classes = (ErnieForCausalLM,) if is_torch_available() else ()
+    pipeline_model_mapping = (
+        {
+            "feature-extraction": ErnieModel,
+            "fill-mask": ErnieForMaskedLM,
+            "question-answering": ErnieForQuestionAnswering,
+            "text-classification": ErnieForSequenceClassification,
+            "text-generation": ErnieForCausalLM,
+            "token-classification": ErnieForTokenClassification,
+            "zero-shot": ErnieForSequenceClassification,
+        }
+        if is_torch_available()
+        else {}
+    )
     fx_compatible = False
 
     # special case for ForPreTraining model
@@ -560,7 +574,7 @@ class ErnieModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase)
             self.assertIsNotNone(model)
 
     @slow
-    @require_torch_gpu
+    @require_torch_accelerator
     def test_torchscript_device_change(self):
         config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()
         for model_class in self.all_model_classes:

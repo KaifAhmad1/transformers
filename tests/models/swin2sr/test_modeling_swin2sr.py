@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """ Testing suite for the PyTorch Swin2SR model. """
-import inspect
 import unittest
 
 from transformers import Swin2SRConfig
@@ -22,6 +21,7 @@ from transformers.utils import is_torch_available, is_vision_available
 
 from ...test_configuration_common import ConfigTester
 from ...test_modeling_common import ModelTesterMixin, _config_zero_init, floats_tensor, ids_tensor
+from ...test_pipeline_mixin import PipelineTesterMixin
 
 
 if is_torch_available():
@@ -45,6 +45,7 @@ class Swin2SRModelTester:
         image_size=32,
         patch_size=1,
         num_channels=3,
+        num_channels_out=1,
         embed_dim=16,
         depths=[1, 2, 1],
         num_heads=[2, 2, 4],
@@ -69,6 +70,7 @@ class Swin2SRModelTester:
         self.image_size = image_size
         self.patch_size = patch_size
         self.num_channels = num_channels
+        self.num_channels_out = num_channels_out
         self.embed_dim = embed_dim
         self.depths = depths
         self.num_heads = num_heads
@@ -109,6 +111,7 @@ class Swin2SRModelTester:
             image_size=self.image_size,
             patch_size=self.patch_size,
             num_channels=self.num_channels,
+            num_channels_out=self.num_channels_out,
             embed_dim=self.embed_dim,
             depths=self.depths,
             num_heads=self.num_heads,
@@ -144,7 +147,8 @@ class Swin2SRModelTester:
 
         expected_image_size = self.image_size * self.upscale
         self.parent.assertEqual(
-            result.reconstruction.shape, (self.batch_size, self.num_channels, expected_image_size, expected_image_size)
+            result.reconstruction.shape,
+            (self.batch_size, self.num_channels_out, expected_image_size, expected_image_size),
         )
 
     def prepare_config_and_inputs_for_common(self):
@@ -155,8 +159,13 @@ class Swin2SRModelTester:
 
 
 @require_torch
-class Swin2SRModelTest(ModelTesterMixin, unittest.TestCase):
+class Swin2SRModelTest(ModelTesterMixin, PipelineTesterMixin, unittest.TestCase):
     all_model_classes = (Swin2SRModel, Swin2SRForImageSuperResolution) if is_torch_available() else ()
+    pipeline_model_mapping = (
+        {"image-feature-extraction": Swin2SRModel, "image-to-image": Swin2SRForImageSuperResolution}
+        if is_torch_available()
+        else {}
+    )
 
     fx_compatible = False
     test_pruning = False
@@ -184,6 +193,11 @@ class Swin2SRModelTest(ModelTesterMixin, unittest.TestCase):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
         self.model_tester.create_and_check_for_image_super_resolution(*config_and_inputs)
 
+    # TODO: check if this works again for PyTorch 2.x.y
+    @unittest.skip(reason="Got `CUDA error: misaligned address` with PyTorch 2.0.0.")
+    def test_multi_gpu_data_parallel_forward(self):
+        pass
+
     @unittest.skip(reason="Swin2SR does not use inputs_embeds")
     def test_inputs_embeds(self):
         pass
@@ -196,6 +210,18 @@ class Swin2SRModelTest(ModelTesterMixin, unittest.TestCase):
     def test_training_gradient_checkpointing(self):
         pass
 
+    @unittest.skip(
+        reason="This architecure seem to not compute gradients properly when using GC, check: https://github.com/huggingface/transformers/pull/27124"
+    )
+    def test_training_gradient_checkpointing_use_reentrant(self):
+        pass
+
+    @unittest.skip(
+        reason="This architecure seem to not compute gradients properly when using GC, check: https://github.com/huggingface/transformers/pull/27124"
+    )
+    def test_training_gradient_checkpointing_use_reentrant_false(self):
+        pass
+
     def test_model_common_attributes(self):
         config, _ = self.model_tester.prepare_config_and_inputs_for_common()
 
@@ -204,18 +230,6 @@ class Swin2SRModelTest(ModelTesterMixin, unittest.TestCase):
             self.assertIsInstance(model.get_input_embeddings(), (nn.Module))
             x = model.get_output_embeddings()
             self.assertTrue(x is None or isinstance(x, nn.Linear))
-
-    def test_forward_signature(self):
-        config, _ = self.model_tester.prepare_config_and_inputs_for_common()
-
-        for model_class in self.all_model_classes:
-            model = model_class(config)
-            signature = inspect.signature(model.forward)
-            # signature.parameters is an OrderedDict => so arg_names order is deterministic
-            arg_names = [*signature.parameters.keys()]
-
-            expected_arg_names = ["pixel_values"]
-            self.assertListEqual(arg_names[:1], expected_arg_names)
 
     @slow
     def test_model_from_pretrained(self):

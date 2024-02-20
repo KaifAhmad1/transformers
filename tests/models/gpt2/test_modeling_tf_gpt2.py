@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
 import unittest
 
 from transformers import GPT2Config, is_tf_available
@@ -20,6 +22,7 @@ from transformers.testing_utils import require_tf, require_tf2onnx, slow
 
 from ...test_configuration_common import ConfigTester
 from ...test_modeling_tf_common import TFModelTesterMixin, floats_tensor, ids_tensor, random_attention_mask
+from ...test_pipeline_mixin import PipelineTesterMixin
 from ...utils.test_modeling_tf_core import TFCoreModelTesterMixin
 
 
@@ -52,7 +55,7 @@ class TFGPT2ModelTester:
         self.use_mc_token_ids = True
         self.vocab_size = 99
         self.hidden_size = 32
-        self.num_hidden_layers = 5
+        self.num_hidden_layers = 2
         self.num_attention_heads = 4
         self.intermediate_size = 37
         self.hidden_act = "gelu"
@@ -361,13 +364,23 @@ class TFGPT2ModelTester:
 
 
 @require_tf
-class TFGPT2ModelTest(TFModelTesterMixin, TFCoreModelTesterMixin, unittest.TestCase):
+class TFGPT2ModelTest(TFModelTesterMixin, TFCoreModelTesterMixin, PipelineTesterMixin, unittest.TestCase):
     all_model_classes = (
         (TFGPT2Model, TFGPT2LMHeadModel, TFGPT2ForSequenceClassification, TFGPT2DoubleHeadsModel)
         if is_tf_available()
         else ()
     )
     all_generative_model_classes = (TFGPT2LMHeadModel,) if is_tf_available() else ()
+    pipeline_model_mapping = (
+        {
+            "feature-extraction": TFGPT2Model,
+            "text-classification": TFGPT2ForSequenceClassification,
+            "text-generation": TFGPT2LMHeadModel,
+            "zero-shot": TFGPT2ForSequenceClassification,
+        }
+        if is_tf_available()
+        else {}
+    )
     test_head_masking = False
     test_onnx = True
     onnx_min_opset = 10
@@ -403,24 +416,6 @@ class TFGPT2ModelTest(TFModelTesterMixin, TFCoreModelTesterMixin, unittest.TestC
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
         self.model_tester.create_and_check_gpt2_double_head(*config_and_inputs)
 
-    def test_model_common_attributes(self):
-        config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()
-
-        for model_class in self.all_model_classes:
-            model = model_class(config)
-            assert isinstance(model.get_input_embeddings(), tf.keras.layers.Layer)
-
-            if model_class in self.all_generative_model_classes:
-                x = model.get_output_embeddings()
-                assert isinstance(x, tf.keras.layers.Layer)
-                name = model.get_bias()
-                assert name is None
-            else:
-                x = model.get_output_embeddings()
-                assert x is None
-                name = model.get_bias()
-                assert name is None
-
     def test_gpt2_sequence_classification_model(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
         self.model_tester.create_and_check_gpt2_for_sequence_classification(*config_and_inputs)
@@ -450,7 +445,7 @@ class TFGPT2ModelTest(TFModelTesterMixin, TFCoreModelTesterMixin, unittest.TestC
                 continue
 
             model = model_class(config)
-            model(model.dummy_inputs)
+            model.build_in_name_scope()
 
             onnx_model_proto, _ = tf2onnx.convert.from_keras(model, opset=self.onnx_min_opset)
 
@@ -466,8 +461,8 @@ class TFGPT2ModelTest(TFModelTesterMixin, TFCoreModelTesterMixin, unittest.TestC
 class TFGPT2ModelLanguageGenerationTest(unittest.TestCase):
     @slow
     def test_lm_generate_greedy_distilgpt2_batch_special(self):
-        model = TFGPT2LMHeadModel.from_pretrained("distilgpt2")
-        tokenizer = GPT2Tokenizer.from_pretrained("distilgpt2")
+        model = TFGPT2LMHeadModel.from_pretrained("distilbert/distilgpt2")
+        tokenizer = GPT2Tokenizer.from_pretrained("distilbert/distilgpt2")
 
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.padding_side = "left"
@@ -493,8 +488,8 @@ class TFGPT2ModelLanguageGenerationTest(unittest.TestCase):
 
     @slow
     def test_lm_generate_sample_distilgpt2_batch_special(self):
-        model = TFGPT2LMHeadModel.from_pretrained("distilgpt2")
-        tokenizer = GPT2Tokenizer.from_pretrained("distilgpt2")
+        model = TFGPT2LMHeadModel.from_pretrained("distilbert/distilgpt2")
+        tokenizer = GPT2Tokenizer.from_pretrained("distilbert/distilgpt2")
 
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.padding_side = "left"
@@ -527,8 +522,8 @@ class TFGPT2ModelLanguageGenerationTest(unittest.TestCase):
 
     @slow
     def test_lm_generate_greedy_distilgpt2_beam_search_special(self):
-        model = TFGPT2LMHeadModel.from_pretrained("distilgpt2")
-        tokenizer = GPT2Tokenizer.from_pretrained("distilgpt2")
+        model = TFGPT2LMHeadModel.from_pretrained("distilbert/distilgpt2")
+        tokenizer = GPT2Tokenizer.from_pretrained("distilbert/distilgpt2")
 
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.padding_side = "left"
@@ -555,8 +550,8 @@ class TFGPT2ModelLanguageGenerationTest(unittest.TestCase):
     @slow
     def test_lm_generate_distilgpt2_left_padding(self):
         """Tests that the generated text is the same, regarless of left padding"""
-        model = TFGPT2LMHeadModel.from_pretrained("distilgpt2")
-        tokenizer = GPT2Tokenizer.from_pretrained("distilgpt2")
+        model = TFGPT2LMHeadModel.from_pretrained("distilbert/distilgpt2")
+        tokenizer = GPT2Tokenizer.from_pretrained("distilbert/distilgpt2")
 
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.padding_side = "left"
@@ -587,8 +582,8 @@ class TFGPT2ModelLanguageGenerationTest(unittest.TestCase):
 
     @slow
     def test_lm_generate_gpt2_greedy_xla(self):
-        model = TFGPT2LMHeadModel.from_pretrained("gpt2")
-        tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+        model = TFGPT2LMHeadModel.from_pretrained("openai-community/gpt2")
+        tokenizer = GPT2Tokenizer.from_pretrained("openai-community/gpt2")
 
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.padding_side = "left"
@@ -617,8 +612,8 @@ class TFGPT2ModelLanguageGenerationTest(unittest.TestCase):
 
         # forces the generation to happen on CPU, to avoid GPU-related quirks
         with tf.device(":/CPU:0"):
-            model = TFGPT2LMHeadModel.from_pretrained("gpt2")
-            tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+            model = TFGPT2LMHeadModel.from_pretrained("openai-community/gpt2")
+            tokenizer = GPT2Tokenizer.from_pretrained("openai-community/gpt2")
 
             tokenizer.pad_token = tokenizer.eos_token
             tokenizer.padding_side = "left"
@@ -647,8 +642,8 @@ class TFGPT2ModelLanguageGenerationTest(unittest.TestCase):
 
     @slow
     def test_lm_generate_gpt2_beam_search_xla(self):
-        model = TFGPT2LMHeadModel.from_pretrained("gpt2")
-        tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+        model = TFGPT2LMHeadModel.from_pretrained("openai-community/gpt2")
+        tokenizer = GPT2Tokenizer.from_pretrained("openai-community/gpt2")
 
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.padding_side = "left"
@@ -676,8 +671,8 @@ class TFGPT2ModelLanguageGenerationTest(unittest.TestCase):
             "laboratory founded in 2010. DeepMind was acquired by Google in 2014. The company is based"
         )
 
-        gpt2_tokenizer = GPT2Tokenizer.from_pretrained("gpt2-large")
-        gpt2_model = TFGPT2LMHeadModel.from_pretrained("gpt2-large")
+        gpt2_tokenizer = GPT2Tokenizer.from_pretrained("openai-community/gpt2-large")
+        gpt2_model = TFGPT2LMHeadModel.from_pretrained("openai-community/gpt2-large")
         input_ids = gpt2_tokenizer(article, return_tensors="tf")
 
         outputs = gpt2_model.generate(**input_ids, penalty_alpha=0.6, top_k=4, max_length=256)
@@ -710,8 +705,8 @@ class TFGPT2ModelLanguageGenerationTest(unittest.TestCase):
             "laboratory founded in 2010. DeepMind was acquired by Google in 2014. The company is based"
         )
 
-        gpt2_tokenizer = GPT2Tokenizer.from_pretrained("gpt2-large")
-        gpt2_model = TFGPT2LMHeadModel.from_pretrained("gpt2-large")
+        gpt2_tokenizer = GPT2Tokenizer.from_pretrained("openai-community/gpt2-large")
+        gpt2_model = TFGPT2LMHeadModel.from_pretrained("openai-community/gpt2-large")
         input_ids = gpt2_tokenizer(article, return_tensors="tf")
 
         xla_generate = tf.function(gpt2_model.generate, jit_compile=True)

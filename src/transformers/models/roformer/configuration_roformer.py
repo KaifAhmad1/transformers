@@ -72,7 +72,7 @@ class RoFormerConfig(PretrainedConfig):
             The non-linear activation function (function or string) in the encoder and pooler. If string, `"gelu"`,
             `"relu"`, `"selu"` and `"gelu_new"` are supported.
         hidden_dropout_prob (`float`, *optional*, defaults to 0.1):
-            The dropout probabilitiy for all fully connected layers in the embeddings, encoder, and pooler.
+            The dropout probability for all fully connected layers in the embeddings, encoder, and pooler.
         attention_probs_dropout_prob (`float`, *optional*, defaults to 0.1):
             The dropout ratio for the attention probabilities.
         max_position_embeddings (`int`, *optional*, defaults to 1536):
@@ -100,12 +100,13 @@ class RoFormerConfig(PretrainedConfig):
     >>> # Initializing a RoFormer junnyu/roformer_chinese_base style configuration
     >>> configuration = RoFormerConfig()
 
-    >>> # Initializing a model from the junnyu/roformer_chinese_base style configuration
+    >>> # Initializing a model (with random weights) from the junnyu/roformer_chinese_base style configuration
     >>> model = RoFormerModel(configuration)
 
     >>> # Accessing the model configuration
     >>> configuration = model.config
     ```"""
+
     model_type = "roformer"
 
     def __init__(

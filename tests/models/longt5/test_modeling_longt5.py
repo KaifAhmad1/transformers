@@ -26,6 +26,7 @@ from transformers.utils import cached_property
 from ...generation.test_utils import GenerationTesterMixin
 from ...test_configuration_common import ConfigTester
 from ...test_modeling_common import ModelTesterMixin, ids_tensor
+from ...test_pipeline_mixin import PipelineTesterMixin
 
 
 if is_torch_available():
@@ -39,7 +40,6 @@ if is_torch_available():
         LongT5Model,
     )
     from transformers.models.longt5.modeling_longt5 import LONGT5_PRETRAINED_MODEL_ARCHIVE_LIST
-    from transformers.pytorch_utils import is_torch_less_than_1_11
 
 
 class LongT5ModelTester:
@@ -58,7 +58,7 @@ class LongT5ModelTester:
         use_attention_mask=True,
         use_labels=True,
         hidden_size=32,
-        num_hidden_layers=5,
+        num_hidden_layers=2,
         num_attention_heads=4,
         d_ff=37,
         relative_attention_num_buckets=8,
@@ -500,9 +500,20 @@ class LongT5ModelTester:
 
 
 @require_torch
-class LongT5ModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase):
+class LongT5ModelTest(ModelTesterMixin, GenerationTesterMixin, PipelineTesterMixin, unittest.TestCase):
     all_model_classes = (LongT5Model, LongT5ForConditionalGeneration) if is_torch_available() else ()
     all_generative_model_classes = (LongT5ForConditionalGeneration,) if is_torch_available() else ()
+    pipeline_model_mapping = (
+        {
+            "conversational": LongT5ForConditionalGeneration,
+            "feature-extraction": LongT5Model,
+            "summarization": LongT5ForConditionalGeneration,
+            "text2text-generation": LongT5ForConditionalGeneration,
+            "translation": LongT5ForConditionalGeneration,
+        }
+        if is_torch_available()
+        else {}
+    )
     fx_compatible = False
     test_pruning = False
     test_torchscript = True
@@ -583,10 +594,6 @@ class LongT5ModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase
             model = LongT5Model.from_pretrained(model_name)
             self.assertIsNotNone(model)
 
-    @unittest.skipIf(
-        not is_torch_available() or is_torch_less_than_1_11,
-        "Test failed with torch < 1.11 with an exception in a C++ file.",
-    )
     @slow
     def test_export_to_onnx(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
@@ -904,7 +911,7 @@ class LongT5EncoderOnlyModelTester:
         # For common tests
         use_attention_mask=True,
         hidden_size=32,
-        num_hidden_layers=5,
+        num_hidden_layers=2,
         num_attention_heads=4,
         d_ff=37,
         relative_attention_num_buckets=8,

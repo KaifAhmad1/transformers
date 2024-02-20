@@ -14,6 +14,8 @@
 # limitations under the License.
 
 
+from __future__ import annotations
+
 import unittest
 
 from transformers import is_tf_available, is_torch_available
@@ -73,7 +75,7 @@ class TFPTAutoModelTest(unittest.TestCase):
     @slow
     def test_model_from_pretrained(self):
         # for model_name in TF_BERT_PRETRAINED_MODEL_ARCHIVE_LIST[:1]:
-        for model_name in ["bert-base-uncased"]:
+        for model_name in ["google-bert/bert-base-uncased"]:
             config = AutoConfig.from_pretrained(model_name)
             self.assertIsNotNone(config)
             self.assertIsInstance(config, BertConfig)
@@ -89,7 +91,7 @@ class TFPTAutoModelTest(unittest.TestCase):
     @slow
     def test_model_for_pretraining_from_pretrained(self):
         # for model_name in TF_BERT_PRETRAINED_MODEL_ARCHIVE_LIST[:1]:
-        for model_name in ["bert-base-uncased"]:
+        for model_name in ["google-bert/bert-base-uncased"]:
             config = AutoConfig.from_pretrained(model_name)
             self.assertIsNotNone(config)
             self.assertIsInstance(config, BertConfig)
@@ -183,7 +185,7 @@ class TFPTAutoModelTest(unittest.TestCase):
     @slow
     def test_sequence_classification_model_from_pretrained(self):
         # for model_name in TF_BERT_PRETRAINED_MODEL_ARCHIVE_LIST[:1]:
-        for model_name in ["bert-base-uncased"]:
+        for model_name in ["google-bert/bert-base-uncased"]:
             config = AutoConfig.from_pretrained(model_name)
             self.assertIsNotNone(config)
             self.assertIsInstance(config, BertConfig)
@@ -199,7 +201,7 @@ class TFPTAutoModelTest(unittest.TestCase):
     @slow
     def test_question_answering_model_from_pretrained(self):
         # for model_name in TF_BERT_PRETRAINED_MODEL_ARCHIVE_LIST[:1]:
-        for model_name in ["bert-base-uncased"]:
+        for model_name in ["google-bert/bert-base-uncased"]:
             config = AutoConfig.from_pretrained(model_name)
             self.assertIsNotNone(config)
             self.assertIsInstance(config, BertConfig)

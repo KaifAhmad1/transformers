@@ -61,7 +61,7 @@ DISCRIMINATOR_MODELS_PARAMS = {
         "embed_size": 1024,
         "class_vocab": {"non_clickbait": 0, "clickbait": 1},
         "default_class": 1,
-        "pretrained_model": "gpt2-medium",
+        "pretrained_model": "openai-community/gpt2-medium",
     },
     "sentiment": {
         "url": "https://s3.amazonaws.com/models.huggingface.co/bert/pplm/discriminators/SST_classifier_head.pt",
@@ -69,7 +69,7 @@ DISCRIMINATOR_MODELS_PARAMS = {
         "embed_size": 1024,
         "class_vocab": {"very_positive": 2, "very_negative": 3},
         "default_class": 3,
-        "pretrained_model": "gpt2-medium",
+        "pretrained_model": "openai-community/gpt2-medium",
     },
 }
 
@@ -127,11 +127,9 @@ def perturb_past(
     _, _, _, curr_length, _ = past[0].shape
 
     if curr_length > window_length and window_length > 0:
-        ones_key_val_shape = tuple(past[0].shape[:-2]) + tuple([window_length]) + tuple(past[0].shape[-1:])
+        ones_key_val_shape = tuple(past[0].shape[:-2]) + (window_length,) + tuple(past[0].shape[-1:])
 
-        zeros_key_val_shape = (
-            tuple(past[0].shape[:-2]) + tuple([curr_length - window_length]) + tuple(past[0].shape[-1:])
-        )
+        zeros_key_val_shape = tuple(past[0].shape[:-2]) + (curr_length - window_length,) + tuple(past[0].shape[-1:])
 
         ones_mask = torch.ones(ones_key_val_shape)
         ones_mask = decay_mask * ones_mask.permute(0, 1, 2, 4, 3)
@@ -587,7 +585,7 @@ def set_generic_model_params(discrim_weights, discrim_meta):
 
 
 def run_pplm_example(
-    pretrained_model="gpt2-medium",
+    pretrained_model="openai-community/gpt2-medium",
     cond_text="",
     uncond=False,
     num_samples=1,
@@ -740,7 +738,7 @@ if __name__ == "__main__":
         "--pretrained_model",
         "-M",
         type=str,
-        default="gpt2-medium",
+        default="openai-community/gpt2-medium",
         help="pretrained model name or path to local checkpoint",
     )
     parser.add_argument("--cond_text", type=str, default="The lake", help="Prefix texts to condition on")

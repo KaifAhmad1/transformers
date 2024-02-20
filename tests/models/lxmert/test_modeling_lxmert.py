@@ -25,6 +25,7 @@ from transformers.testing_utils import require_torch, slow, torch_device
 
 from ...test_configuration_common import ConfigTester
 from ...test_modeling_common import ModelTesterMixin, ids_tensor
+from ...test_pipeline_mixin import PipelineTesterMixin
 
 
 if is_torch_available():
@@ -529,8 +530,13 @@ class LxmertModelTester:
 
 
 @require_torch
-class LxmertModelTest(ModelTesterMixin, unittest.TestCase):
+class LxmertModelTest(ModelTesterMixin, PipelineTesterMixin, unittest.TestCase):
     all_model_classes = (LxmertModel, LxmertForPreTraining, LxmertForQuestionAnswering) if is_torch_available() else ()
+    pipeline_model_mapping = (
+        {"feature-extraction": LxmertModel, "question-answering": LxmertForQuestionAnswering}
+        if is_torch_available()
+        else {}
+    )
 
     fx_compatible = True
     test_head_masking = False
@@ -745,7 +751,7 @@ class LxmertModelTest(ModelTesterMixin, unittest.TestCase):
                 tf_inputs_dict[key] = self.prepare_pt_inputs_from_tf_inputs(value)
             elif isinstance(value, (list, tuple)):
                 tf_inputs_dict[key] = (self.prepare_pt_inputs_from_tf_inputs(iter_value) for iter_value in value)
-            elif type(value) == bool:
+            elif isinstance(value, bool):
                 tf_inputs_dict[key] = value
             elif key == "input_values":
                 tf_inputs_dict[key] = tf.convert_to_tensor(value.cpu().numpy(), dtype=tf.float32)

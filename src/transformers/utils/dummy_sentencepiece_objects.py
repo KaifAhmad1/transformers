@@ -44,6 +44,13 @@ class CamembertTokenizer(metaclass=DummyObject):
         requires_backends(self, ["sentencepiece"])
 
 
+class CodeLlamaTokenizer(metaclass=DummyObject):
+    _backends = ["sentencepiece"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["sentencepiece"])
+
+
 class CpmTokenizer(metaclass=DummyObject):
     _backends = ["sentencepiece"]
 
@@ -80,6 +87,13 @@ class GPTSw3Tokenizer(metaclass=DummyObject):
 
 
 class LayoutXLMTokenizer(metaclass=DummyObject):
+    _backends = ["sentencepiece"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["sentencepiece"])
+
+
+class LlamaTokenizer(metaclass=DummyObject):
     _backends = ["sentencepiece"]
 
     def __init__(self, *args, **kwargs):
@@ -157,6 +171,20 @@ class ReformerTokenizer(metaclass=DummyObject):
 
 
 class RemBertTokenizer(metaclass=DummyObject):
+    _backends = ["sentencepiece"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["sentencepiece"])
+
+
+class SeamlessM4TTokenizer(metaclass=DummyObject):
+    _backends = ["sentencepiece"]
+
+    def __init__(self, *args, **kwargs):
+        requires_backends(self, ["sentencepiece"])
+
+
+class SiglipTokenizer(metaclass=DummyObject):
     _backends = ["sentencepiece"]
 
     def __init__(self, *args, **kwargs):

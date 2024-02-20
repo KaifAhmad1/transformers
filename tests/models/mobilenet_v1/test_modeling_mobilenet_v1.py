@@ -15,7 +15,6 @@
 """ Testing suite for the PyTorch MobileNetV1 model. """
 
 
-import inspect
 import unittest
 
 from transformers import MobileNetV1Config
@@ -24,6 +23,7 @@ from transformers.utils import cached_property, is_torch_available, is_vision_av
 
 from ...test_configuration_common import ConfigTester
 from ...test_modeling_common import ModelTesterMixin, floats_tensor, ids_tensor
+from ...test_pipeline_mixin import PipelineTesterMixin
 
 
 if is_torch_available():
@@ -36,7 +36,7 @@ if is_torch_available():
 if is_vision_available():
     from PIL import Image
 
-    from transformers import MobileNetV1FeatureExtractor
+    from transformers import MobileNetV1ImageProcessor
 
 
 class MobileNetV1ConfigTester(ConfigTester):
@@ -139,13 +139,18 @@ class MobileNetV1ModelTester:
 
 
 @require_torch
-class MobileNetV1ModelTest(ModelTesterMixin, unittest.TestCase):
+class MobileNetV1ModelTest(ModelTesterMixin, PipelineTesterMixin, unittest.TestCase):
     """
     Here we also overwrite some of the tests of test_modeling_common.py, as MobileNetV1 does not use input_ids, inputs_embeds,
     attention_mask and seq_length.
     """
 
     all_model_classes = (MobileNetV1Model, MobileNetV1ForImageClassification) if is_torch_available() else ()
+    pipeline_model_mapping = (
+        {"image-feature-extraction": MobileNetV1Model, "image-classification": MobileNetV1ForImageClassification}
+        if is_torch_available()
+        else {}
+    )
 
     test_pruning = False
     test_resize_embeddings = False
@@ -170,18 +175,6 @@ class MobileNetV1ModelTest(ModelTesterMixin, unittest.TestCase):
     @unittest.skip(reason="MobileNetV1 does not output attentions")
     def test_attention_outputs(self):
         pass
-
-    def test_forward_signature(self):
-        config, _ = self.model_tester.prepare_config_and_inputs_for_common()
-
-        for model_class in self.all_model_classes:
-            model = model_class(config)
-            signature = inspect.signature(model.forward)
-            # signature.parameters is an OrderedDict => so arg_names order is deterministic
-            arg_names = [*signature.parameters.keys()]
-
-            expected_arg_names = ["pixel_values"]
-            self.assertListEqual(arg_names[:1], expected_arg_names)
 
     def test_model(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
@@ -234,20 +227,18 @@ def prepare_img():
 @require_vision
 class MobileNetV1ModelIntegrationTest(unittest.TestCase):
     @cached_property
-    def default_feature_extractor(self):
+    def default_image_processor(self):
         return (
-            MobileNetV1FeatureExtractor.from_pretrained("google/mobilenet_v1_1.0_224")
-            if is_vision_available()
-            else None
+            MobileNetV1ImageProcessor.from_pretrained("google/mobilenet_v1_1.0_224") if is_vision_available() else None
         )
 
     @slow
     def test_inference_image_classification_head(self):
         model = MobileNetV1ForImageClassification.from_pretrained("google/mobilenet_v1_1.0_224").to(torch_device)
 
-        feature_extractor = self.default_feature_extractor
+        image_processor = self.default_image_processor
         image = prepare_img()
-        inputs = feature_extractor(images=image, return_tensors="pt").to(torch_device)
+        inputs = image_processor(images=image, return_tensors="pt").to(torch_device)
 
         # forward pass
         with torch.no_grad():

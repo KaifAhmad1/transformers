@@ -68,12 +68,14 @@ class CodeGenTokenizerFast(PreTrainedTokenizerFast):
     This tokenizer has been trained to treat spaces like parts of the tokens (a bit like sentencepiece) so a word will
     be encoded differently whether it is at the beginning of the sentence (without space) or not:
 
-    ```
+    ```python
     >>> from transformers import CodeGenTokenizerFast
+
     >>> tokenizer = CodeGenTokenizerFast.from_pretrained("Salesforce/codegen-350M-mono")
-    >>> tokenizer("Hello world")['input_ids']
+    >>> tokenizer("Hello world")["input_ids"]
     [15496, 995]
-    >>> tokenizer(" Hello world")['input_ids']
+
+    >>> tokenizer(" Hello world")["input_ids"]
     [18435, 995]
     ```
 
@@ -90,25 +92,23 @@ class CodeGenTokenizerFast(PreTrainedTokenizerFast):
     refer to this superclass for more information regarding those methods.
 
     Args:
-        vocab_file (`str`):
+        vocab_file (`str`, *optional*):
             Path to the vocabulary file.
-        merges_file (`str`):
+        merges_file (`str`, *optional*):
             Path to the merges file.
-        errors (`str`, *optional*, defaults to `"replace"`):
-            Paradigm to follow when decoding bytes to UTF-8. See
-            [bytes.decode](https://docs.python.org/3/library/stdtypes.html#bytes.decode) for more information.
-        unk_token (`str`, *optional*, defaults to `<|endoftext|>`):
+        tokenizer_file (`str`, *optional*):
+            Path to [tokenizers](https://github.com/huggingface/tokenizers) file (generally has a .json extension) that
+            contains everything needed to load the tokenizer.
+        unk_token (`str`, *optional*, defaults to `"<|endoftext|>"`):
             The unknown token. A token that is not in the vocabulary cannot be converted to an ID and is set to be this
             token instead.
-        bos_token (`str`, *optional*, defaults to `<|endoftext|>`):
+        bos_token (`str`, *optional*, defaults to `"<|endoftext|>"`):
             The beginning of sequence token.
-        eos_token (`str`, *optional*, defaults to `<|endoftext|>`):
+        eos_token (`str`, *optional*, defaults to `"<|endoftext|>"`):
             The end of sequence token.
         add_prefix_space (`bool`, *optional*, defaults to `False`):
             Whether or not to add an initial space to the input. This allows to treat the leading word just as any
             other word. (CodeGen tokenizer detect beginning of words by the preceding space).
-        trim_offsets (`bool`, *optional*, defaults to `True`):
-            Whether or not the post-processing step should trim offsets to avoid including whitespaces.
     """
 
     vocab_files_names = VOCAB_FILES_NAMES
@@ -142,7 +142,7 @@ class CodeGenTokenizerFast(PreTrainedTokenizerFast):
         if kwargs.pop("add_bos_token", False):
             model_id = kwargs.pop("name_or_path", "")
             raise ValueError(
-                "Currenty GPT2's fast tokenizer does NOT support adding a BOS token."
+                "Currenty GPT2's fast tokenizer does NOT support adding a BOS token. "
                 "Instead you should use GPT2's slow tokenizer class `CodeGenTokenizer` as follows: \n"
                 f"`CodeGenTokenizer.from_pretrained('{model_id}')`\nor\n"
                 f"`AutoTokenizer.from_pretrained('{model_id}', use_fast=False)`\n"
@@ -185,7 +185,7 @@ class CodeGenTokenizerFast(PreTrainedTokenizerFast):
         self,
         token_ids: Union[int, List[int], "np.ndarray", "torch.Tensor", "tf.Tensor"],
         skip_special_tokens: bool = False,
-        clean_up_tokenization_spaces: bool = True,
+        clean_up_tokenization_spaces: bool = None,
         truncate_before_pattern: Optional[List[str]] = None,
         **kwargs,
     ) -> str:
@@ -200,8 +200,9 @@ class CodeGenTokenizerFast(PreTrainedTokenizerFast):
                 List of tokenized input ids. Can be obtained using the `__call__` method.
             skip_special_tokens (`bool`, *optional*, defaults to `False`):
                 Whether or not to remove special tokens in the decoding.
-            clean_up_tokenization_spaces (`bool`, *optional*, defaults to `True`):
-                Whether or not to clean up the tokenization spaces.
+            clean_up_tokenization_spaces (`bool`, *optional*):
+                Whether or not to clean up the tokenization spaces. If `None`, will default to
+                `self.clean_up_tokenization_spaces` (available in the `tokenizer_config`).
             truncate_before_pattern (`List[str]`, *optional*, defaults to `None`):
                 A list of regular expression strings that will be used to truncate the returned string. This can be
                 used to remove extra pieces of code (e.g. truncate if observing a comment symbol "#" at the beginning

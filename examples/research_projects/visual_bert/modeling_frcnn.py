@@ -554,8 +554,8 @@ class Matcher(object):
         assert thresholds[0] > 0
         thresholds.insert(0, -float("inf"))
         thresholds.append(float("inf"))
-        assert all([low <= high for (low, high) in zip(thresholds[:-1], thresholds[1:])])
-        assert all([label_i in [-1, 0, 1] for label_i in labels])
+        assert all(low <= high for (low, high) in zip(thresholds[:-1], thresholds[1:]))
+        assert all(label_i in [-1, 0, 1] for label_i in labels)
         assert len(labels) == len(thresholds) - 1
         self.thresholds = thresholds
         self.labels = labels
@@ -1095,7 +1095,7 @@ class ROIPooler(nn.Module):
         Returns:
             A tensor of shape(N*B, Channels, output_size, output_size)
         """
-        x = [v for v in feature_maps.values()]
+        x = list(feature_maps.values())
         num_level_assignments = len(self.level_poolers)
         assert len(x) == num_level_assignments and len(boxes) == x[0].size(0)
 
@@ -1706,9 +1706,7 @@ class GeneralizedRCNN(nn.Module):
             elif os.path.isfile(pretrained_model_name_or_path) or is_remote_url(pretrained_model_name_or_path):
                 archive_file = pretrained_model_name_or_path
             elif os.path.isfile(pretrained_model_name_or_path + ".index"):
-                assert (
-                    from_tf
-                ), "We found a TensorFlow checkpoint at {}, please set from_tf to True to load from this checkpoint".format(
+                assert from_tf, "We found a TensorFlow checkpoint at {}, please set from_tf to True to load from this checkpoint".format(
                     pretrained_model_name_or_path + ".index"
                 )
                 archive_file = pretrained_model_name_or_path + ".index"

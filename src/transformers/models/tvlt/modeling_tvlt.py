@@ -88,8 +88,8 @@ class TvltModelOutput(ModelOutput):
     audio_label_masks: torch.LongTensor = None
     pixel_ids_restore: torch.LongTensor = None
     audio_ids_restore: torch.LongTensor = None
-    hidden_states: Optional[Tuple[torch.FloatTensor]] = None
-    attentions: Optional[Tuple[torch.FloatTensor]] = None
+    hidden_states: Optional[Tuple[torch.FloatTensor, ...]] = None
+    attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
 
 
 @dataclass
@@ -111,8 +111,8 @@ class TvltDecoderOutput(ModelOutput):
     """
 
     logits: torch.FloatTensor = None
-    hidden_states: Optional[Tuple[torch.FloatTensor]] = None
-    attentions: Optional[Tuple[torch.FloatTensor]] = None
+    hidden_states: Optional[Tuple[torch.FloatTensor, ...]] = None
+    attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
 
 
 @dataclass
@@ -145,15 +145,15 @@ class TvltForPreTrainingOutput(ModelOutput):
     matching_logits: torch.FloatTensor = None
     pixel_logits: torch.FloatTensor = None
     audio_logits: torch.FloatTensor = None
-    hidden_states: Optional[Tuple[torch.FloatTensor]] = None
-    attentions: Optional[Tuple[torch.FloatTensor]] = None
+    hidden_states: Optional[Tuple[torch.FloatTensor, ...]] = None
+    attentions: Optional[Tuple[torch.FloatTensor, ...]] = None
 
 
 def generate_pixel_mask_noise(pixel_values, pixel_mask=None, mask_ratio=0.75):
     """Generate noise for audio masking."""
 
     batch_size, seq_len = pixel_values.shape[:2]
-    noise = torch.rand((batch_size, seq_len))  # noise in [0, 1]
+    noise = torch.rand((batch_size, seq_len), device=pixel_values.device)  # noise in [0, 1]
     len_keep = int(seq_len * (1 - mask_ratio))
     return noise, len_keep
 
@@ -165,10 +165,13 @@ def generate_audio_mask_noise(audio_values, audio_mask=None, mask_ratio=0.75, ma
     if mask_type == "frame-level":
         num_time_patches = seq_len // freq_len
         noise = (
-            torch.rand(batch_size, num_time_patches).unsqueeze(-1).repeat(1, 1, freq_len).view(batch_size, seq_len)
+            torch.rand(batch_size, num_time_patches, device=audio_values.device)
+            .unsqueeze(-1)
+            .repeat(1, 1, freq_len)
+            .view(batch_size, seq_len)
         )  # noise in [0, 1]
     elif mask_type == "patch-level":
-        noise = torch.rand(batch_size, seq_len)  # noise in [0, 1]
+        noise = torch.rand(batch_size, seq_len, device=audio_values.device)  # noise in [0, 1]
     len_keep = int(seq_len * (1 - mask_ratio))
     return noise, len_keep
 
@@ -557,18 +560,12 @@ class TvltEncoder(nn.Module):
             layer_head_mask = head_mask[i] if head_mask is not None else None
 
             if self.gradient_checkpointing and self.training:
-
-                def create_custom_forward(module):
-                    def custom_forward(*inputs):
-                        return module(*inputs, output_attentions)
-
-                    return custom_forward
-
-                layer_outputs = torch.utils.checkpoint.checkpoint(
-                    create_custom_forward(layer_module),
+                layer_outputs = self._gradient_checkpointing_func(
+                    layer_module.__call__,
                     hidden_states,
                     attention_mask,
                     layer_head_mask,
+                    output_attentions,
                 )
             else:
                 layer_outputs = layer_module(hidden_states, attention_mask, layer_head_mask, output_attentions)
@@ -612,10 +609,6 @@ class TvltPreTrainedModel(PreTrainedModel):
         elif isinstance(module, nn.LayerNorm):
             module.bias.data.zero_()
             module.weight.data.fill_(1.0)
-
-    def _set_gradient_checkpointing(self, module, value=False):
-        if isinstance(module, TvltEncoder):
-            module.gradient_checkpointing = value
 
 
 TVLT_START_DOCSTRING = r"""
@@ -712,16 +705,16 @@ class TvltModel(TvltPreTrainedModel):
     @replace_return_docstrings(output_type=TvltModelOutput, config_class=_CONFIG_FOR_DOC)
     def forward(
         self,
-        pixel_values,
-        audio_values,
-        pixel_mask=None,
-        audio_mask=None,
-        mask_pixel=False,
-        mask_audio=False,
-        output_attentions=None,
-        output_hidden_states=None,
-        return_dict=None,
-    ) -> Union[tuple, TvltModelOutput]:
+        pixel_values: torch.FloatTensor,
+        audio_values: torch.FloatTensor,
+        pixel_mask: Optional[torch.FloatTensor] = None,
+        audio_mask: Optional[torch.FloatTensor] = None,
+        mask_pixel: bool = False,
+        mask_audio: bool = False,
+        output_attentions: Optional[bool] = None,
+        output_hidden_states: Optional[bool] = None,
+        return_dict: Optional[bool] = None,
+    ) -> Union[Tuple[torch.FloatTensor], TvltModelOutput]:
         r"""
         Returns:
 
@@ -874,17 +867,11 @@ class TvltDecoder(nn.Module):
                 all_hidden_states = all_hidden_states + (hidden_states,)
 
             if self.gradient_checkpointing and self.training:
-
-                def create_custom_forward(module):
-                    def custom_forward(*inputs):
-                        return module(*inputs, output_attentions)
-
-                    return custom_forward
-
-                layer_outputs = torch.utils.checkpoint.checkpoint(
-                    create_custom_forward(layer_module),
+                layer_outputs = self._gradient_checkpointing_func(
+                    layer_module.__call__,
                     hidden_states,
                     None,
+                    output_attentions,
                 )
             else:
                 layer_outputs = layer_module(hidden_states, output_attentions=output_attentions)
@@ -1046,17 +1033,17 @@ class TvltForPreTraining(TvltPreTrainedModel):
     @replace_return_docstrings(output_type=TvltForPreTrainingOutput, config_class=_CONFIG_FOR_DOC)
     def forward(
         self,
-        pixel_values,
-        audio_values,
-        pixel_mask=None,
-        audio_mask=None,
-        labels=None,
-        pixel_values_mixed=None,
-        pixel_mask_mixed=None,
-        output_attentions=None,
-        output_hidden_states=None,
-        return_dict=None,
-    ) -> Union[tuple, TvltForPreTrainingOutput]:
+        pixel_values: torch.FloatTensor,
+        audio_values: torch.FloatTensor,
+        pixel_mask: Optional[torch.FloatTensor] = None,
+        audio_mask: Optional[torch.FloatTensor] = None,
+        labels: Optional[torch.LongTensor] = None,
+        pixel_values_mixed: Optional[torch.FloatTensor] = None,
+        pixel_mask_mixed: Optional[torch.FloatTensor] = None,
+        output_attentions: Optional[bool] = None,
+        output_hidden_states: Optional[bool] = None,
+        return_dict: Optional[bool] = None,
+    ) -> Union[Tuple[torch.FloatTensor], TvltForPreTrainingOutput]:
         r"""
         pixel_values_mixed (`torch.FloatTensor` of shape `(batch_size, num_frames, num_channels, height, width)`):
             Pixel values that mix positive and negative samples in Tvlt vision-audio matching. Audio values can be
@@ -1247,15 +1234,15 @@ class TvltForAudioVisualClassification(TvltPreTrainedModel):
     @replace_return_docstrings(output_type=SequenceClassifierOutput, config_class=_CONFIG_FOR_DOC)
     def forward(
         self,
-        pixel_values,
-        audio_values,
-        pixel_mask=None,
-        audio_mask=None,
-        output_attentions=None,
-        output_hidden_states=None,
-        return_dict=None,
-        labels=None,
-    ) -> Union[tuple, SequenceClassifierOutput]:
+        pixel_values: torch.FloatTensor,
+        audio_values: torch.FloatTensor,
+        pixel_mask: Optional[torch.FloatTensor] = None,
+        audio_mask: Optional[torch.FloatTensor] = None,
+        output_attentions: Optional[bool] = None,
+        output_hidden_states: Optional[bool] = None,
+        return_dict: Optional[bool] = None,
+        labels: Optional[torch.LongTensor] = None,
+    ) -> Union[Tuple[torch.FloatTensor], SequenceClassifierOutput]:
         r"""
         labels (`torch.LongTensor` of shape `(batch_size, num_labels)`, *optional*):
             Labels for computing the audiovisual loss. Indices should be in `[0, ..., num_classes-1]` where num_classes

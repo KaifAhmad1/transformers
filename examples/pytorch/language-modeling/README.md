@@ -36,7 +36,7 @@ the tokenization). The loss here is that of causal language modeling.
 
 ```bash
 python run_clm.py \
-    --model_name_or_path gpt2 \
+    --model_name_or_path openai-community/gpt2 \
     --dataset_name wikitext \
     --dataset_config_name wikitext-2-raw-v1 \
     --per_device_train_batch_size 8 \
@@ -53,7 +53,7 @@ To run on your own training and validation files, use the following command:
 
 ```bash
 python run_clm.py \
-    --model_name_or_path gpt2 \
+    --model_name_or_path openai-community/gpt2 \
     --train_file path_to_train_file \
     --validation_file path_to_validation_file \
     --per_device_train_batch_size 8 \
@@ -69,7 +69,7 @@ This uses the built in HuggingFace `Trainer` for training. If you want to use a 
 python run_clm_no_trainer.py \
     --dataset_name wikitext \
     --dataset_config_name wikitext-2-raw-v1 \
-    --model_name_or_path gpt2 \
+    --model_name_or_path openai-community/gpt2 \
     --output_dir /tmp/test-clm
 ```
 
@@ -84,7 +84,7 @@ converge slightly slower (over-fitting takes more epochs).
 
 ```bash
 python run_mlm.py \
-    --model_name_or_path roberta-base \
+    --model_name_or_path FacebookAI/roberta-base \
     --dataset_name wikitext \
     --dataset_config_name wikitext-2-raw-v1 \
     --per_device_train_batch_size 8 \
@@ -98,7 +98,7 @@ To run on your own training and validation files, use the following command:
 
 ```bash
 python run_mlm.py \
-    --model_name_or_path roberta-base \
+    --model_name_or_path FacebookAI/roberta-base \
     --train_file path_to_train_file \
     --validation_file path_to_validation_file \
     --per_device_train_batch_size 8 \
@@ -117,7 +117,7 @@ This uses the built in HuggingFace `Trainer` for training. If you want to use a 
 python run_mlm_no_trainer.py \
     --dataset_name wikitext \
     --dataset_config_name wikitext-2-raw-v1 \
-    --model_name_or_path roberta-base \
+    --model_name_or_path FacebookAI/roberta-base \
     --output_dir /tmp/test-mlm
 ```
 
@@ -144,7 +144,7 @@ Here is how to fine-tune XLNet on wikitext-2:
 
 ```bash
 python run_plm.py \
-    --model_name_or_path=xlnet-base-cased \
+    --model_name_or_path=xlnet/xlnet-base-cased \
     --dataset_name wikitext \
     --dataset_config_name wikitext-2-raw-v1 \
     --per_device_train_batch_size 8 \
@@ -158,7 +158,7 @@ To fine-tune it on your own training and validation file, run:
 
 ```bash
 python run_plm.py \
-    --model_name_or_path=xlnet-base-cased \
+    --model_name_or_path=xlnet/xlnet-base-cased \
     --train_file path_to_train_file \
     --validation_file path_to_validation_file \
     --per_device_train_batch_size 8 \
@@ -178,13 +178,17 @@ sure all your batches have the same length.
 
 To use the streaming dataset mode which can be very useful for large datasets, add `--streaming` to the command line. This is currently supported by `run_mlm.py` and `run_clm.py`.
 
+## Low Cpu Memory Usage
+
+To use low cpu memory mode which can be very useful for LLM, add `--low_cpu_mem_usage` to the command line. This is currently supported by `run_clm.py`,`run_mlm.py`, `run_plm.py`,`run_mlm_no_trainer.py` and `run_clm_no_trainer.py`.
+
 ## Creating a model on the fly
 
 When training a model from scratch, configuration values may be overridden with the help of `--config_overrides`:
 
 
 ```bash
-python run_clm.py --model_type gpt2 --tokenizer_name gpt2 \ --config_overrides="n_embd=1024,n_head=16,n_layer=48,n_positions=102" \
+python run_clm.py --model_type openai-community/gpt2 --tokenizer_name openai-community/gpt2 \ --config_overrides="n_embd=1024,n_head=16,n_layer=48,n_positions=102" \
 [...]
 ```
 

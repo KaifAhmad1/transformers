@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import os
 import shutil
@@ -488,6 +490,7 @@ class TFRagTestMixin:
         inputs_dict = self.config_and_inputs
         self.check_model_without_retriever(**inputs_dict)
 
+    @slow
     def test_model_generate_from_context_input_ids(self):
         inputs_dict = self.config_and_inputs
         self.check_model_generate_from_context_input_ids(**inputs_dict)
@@ -496,6 +499,7 @@ class TFRagTestMixin:
         inputs_dict = self.config_and_inputs
         self.check_model_with_encoder_outputs(**inputs_dict)
 
+    @slow
     def test_model_generate(self):
         inputs_dict = self.config_and_inputs
         self.check_model_generate(**inputs_dict)
@@ -1001,6 +1005,7 @@ class TFRagModelSaveLoadTests(unittest.TestCase):
                 retriever=rag_retriever,
                 config=rag_config,
             )
+            rag_sequence.build_in_name_scope()
             # check that the from pretrained methods work
             rag_sequence.save_pretrained(tmp_dirname)
             rag_sequence.from_pretrained(tmp_dirname, retriever=rag_retriever)
@@ -1052,6 +1057,7 @@ class TFRagModelSaveLoadTests(unittest.TestCase):
                 retriever=rag_retriever,
                 config=rag_config,
             )
+            rag_token.build_in_name_scope()
             # check that the from pretrained methods work
             rag_token.save_pretrained(tmp_dirname)
             rag_token.from_pretrained(tmp_dirname, retriever=rag_retriever)
